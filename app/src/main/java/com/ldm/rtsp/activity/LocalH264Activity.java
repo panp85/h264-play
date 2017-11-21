@@ -9,7 +9,9 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 import android.widget.Toast;
-
+import android.Manifest;
+import android.support.v4.app.ActivityCompat;
+import android.content.pm.PackageManager;
 import com.ldm.rtsp.R;
 
 import java.io.ByteArrayInputStream;
@@ -42,9 +44,23 @@ public class LocalH264Activity extends Activity {
     private Boolean UseSPSandPPS = false;
     private String filePath = Environment.getExternalStorageDirectory() + "/" + FileName;
 
+    public static void verifyStoragePermissions(Activity activity) {
+        // Check if we have write permission
+        int permission = ActivityCompat.checkSelfPermission(activity,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            String[] permissionsToRequest = new String[2];
+            permissionsToRequest[0] = Manifest.permission.WRITE_EXTERNAL_STORAGE;
+            permissionsToRequest[1] = Manifest.permission.READ_EXTERNAL_STORAGE;
+            ActivityCompat.requestPermissions(activity, permissionsToRequest, 2);
+        }
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        verifyStoragePermissions(this);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_rtsp);
