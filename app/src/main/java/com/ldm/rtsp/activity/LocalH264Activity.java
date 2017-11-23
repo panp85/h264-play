@@ -37,12 +37,18 @@ public class LocalH264Activity extends Activity {
     private boolean mStopFlag = false;
     private DataInputStream mInputStream;
     //private String FileName = "test.h264";
-    private String FileName = "encoder.h264";
+    private String FileName_h264 = "encoder.h264";
+    private String FileName_h265 = "encoder.h265";
     private static final int VIDEO_WIDTH = 1920;
     private static final int VIDEO_HEIGHT = 1088;
     private int FrameRate = 15;
     private Boolean UseSPSandPPS = false;
-    private String filePath = Environment.getExternalStorageDirectory() + "/" + FileName;
+    //private String filePath = Environment.getExternalStorageDirectory() + "/" + FileName;
+    private String filePath;
+	
+	private static final int USE_H264 = 0;
+	private static final int USE_H265 = 1;
+	private int use_h26x = USE_H265;
 
     public static void verifyStoragePermissions(Activity activity) {
         // Check if we have write permission
@@ -65,6 +71,14 @@ public class LocalH264Activity extends Activity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_rtsp);
         mSurface = (SurfaceView) findViewById(R.id.surfaceview);
+		if(use_h26x == USE_H264)
+		{
+		    filePath = Environment.getExternalStorageDirectory() + "/" + FileName_h264;
+		}
+		else if(use_h26x == USE_H265)
+		{
+		    filePath = Environment.getExternalStorageDirectory() + "/" + FileName_h265;
+		}
         File f = new File(filePath);
         if (null == f || !f.exists() || f.length() == 0) {
             Toast.makeText(this, "视频文件不存在", Toast.LENGTH_LONG).show();
@@ -90,12 +104,31 @@ public class LocalH264Activity extends Activity {
 
                 {
                     //通过多媒体格式名创建一个可用的解码器
-                    mCodec = MediaCodec.createDecoderByType("video/avc");
+                    if(use_h26x == USE_H264)
+                    {
+                        mCodec = MediaCodec.createDecoderByType("video/avc");
+                    }
+					else if(use_h26x == USE_H265)
+					{
+                        mCodec = MediaCodec.createDecoderByType("video/hevc");
+					}
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 //初始化编码器
-                final MediaFormat mediaformat = MediaFormat.createVideoFormat("video/avc", VIDEO_WIDTH, VIDEO_HEIGHT);
+                MediaFormat mediaformat;
+                if(use_h26x == USE_H264)
+                {
+                    mediaformat = MediaFormat.createVideoFormat("video/avc", VIDEO_WIDTH, VIDEO_HEIGHT);
+                }
+				else if(use_h26x == USE_H265)
+				{
+                    mediaformat = MediaFormat.createVideoFormat("video/hevc", VIDEO_WIDTH, VIDEO_HEIGHT);
+				}
+				else
+                {
+                    mediaformat = MediaFormat.createVideoFormat("video/avc", VIDEO_WIDTH, VIDEO_HEIGHT);
+                }
                 //获取h264中的pps及sps数据
                 if (UseSPSandPPS) {
                     byte[] header_sps = {0, 0, 0, 1, 103, 66, 0, 42, (byte) 149, (byte) 168, 30, 0, (byte) 137, (byte) 249, 102, (byte) 224, 32, 32, 32, 64};
